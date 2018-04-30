@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="1. 前言网上的教程千篇一律使用MNIST等已经打包好的数据集，直接调用相关的类方法就能将数据作为训练的输入，看来看去觉得并没有什么用。想要学会用Tensorflow，我认为一定要先从数据的准备开始做起，而不是一上来就用MNIST搞一些什么卷及神经网络。我有本书叫《Tensorflow - 实战Google深度学习框架》，里面有一节是讲迁移训练的，代码又乱又长，从输入数据这里就看不太懂，看作者写的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自己做一个Tensorflow的TFRecord">
+<meta property="og:url" content="http://yoursite.com/2018/03/23/tensorflow-dataset/index.html">
+<meta property="og:site_name" content="my blog">
+<meta property="og:description" content="1. 前言网上的教程千篇一律使用MNIST等已经打包好的数据集，直接调用相关的类方法就能将数据作为训练的输入，看来看去觉得并没有什么用。想要学会用Tensorflow，我认为一定要先从数据的准备开始做起，而不是一上来就用MNIST搞一些什么卷及神经网络。我有本书叫《Tensorflow - 实战Google深度学习框架》，里面有一节是讲迁移训练的，代码又乱又长，从输入数据这里就看不太懂，看作者写的">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:image" content="http://yoursite.com/2018/03/23/tensorflow-dataset/2018-03-23-tensorflow-dataset/flower-photos.png">
+<meta property="og:updated_time" content="2018-04-29T15:31:13.684Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="自己做一个Tensorflow的TFRecord">
+<meta name="twitter:description" content="1. 前言网上的教程千篇一律使用MNIST等已经打包好的数据集，直接调用相关的类方法就能将数据作为训练的输入，看来看去觉得并没有什么用。想要学会用Tensorflow，我认为一定要先从数据的准备开始做起，而不是一上来就用MNIST搞一些什么卷及神经网络。我有本书叫《Tensorflow - 实战Google深度学习框架》，里面有一节是讲迁移训练的，代码又乱又长，从输入数据这里就看不太懂，看作者写的">
+<meta name="twitter:image" content="http://yoursite.com/2018/03/23/tensorflow-dataset/2018-03-23-tensorflow-dataset/flower-photos.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>自己做一个Tensorflow的TFRecord</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/sergodeeva">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2018/03/28/custom-estimator/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2018/03/20/first/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/03/23/tensorflow-dataset/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&text=自己做一个Tensorflow的TFRecord"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&is_video=false&description=自己做一个Tensorflow的TFRecord"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=自己做一个Tensorflow的TFRecord&body=Check out this article: http://yoursite.com/2018/03/23/tensorflow-dataset/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&name=自己做一个Tensorflow的TFRecord&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-前言"><span class="toc-number">1.</span> <span class="toc-text">1. 前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-图片数据-flower-photos"><span class="toc-number">2.</span> <span class="toc-text">2. 图片数据 - flower_photos</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-写代码"><span class="toc-number">3.</span> <span class="toc-text">3. 写代码</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-总结"><span class="toc-number">4.</span> <span class="toc-text">4. 总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        自己做一个Tensorflow的TFRecord
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">my blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2018-03-23T08:41:41.000Z" itemprop="datePublished">2018-03-23</time>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h1><p>网上的教程千篇一律使用MNIST等已经打包好的数据集，直接调用相关的类方法就能将数据作为训练的输入，看来看去觉得并没有什么用。<br>想要学会用Tensorflow，我认为一定要先从数据的准备开始做起，而不是一上来就用MNIST搞一些什么卷及神经网络。<br>我有本书叫《Tensorflow - 实战Google深度学习框架》，里面有一节是讲迁移训练的，代码又乱又长，从输入数据这里就看不太懂，看作者写的是直接把原图片丢进模型瓶颈层然后存储输出，我觉得有所不妥，还是先把图片统一存进TFRecords比较合适！</p>
+<h1 id="2-图片数据-flower-photos"><a href="#2-图片数据-flower-photos" class="headerlink" title="2. 图片数据 - flower_photos"></a>2. 图片数据 - flower_photos</h1> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wget http://download.tensorflow.org/example_images/flower_photos.tgz</span><br><span class="line">tar xzf flower_photos.tgz</span><br></pre></td></tr></table></figure>
+<p>解压后，里面按文件夹分类的图片，图片尺寸不一。</p>
+<p><img src="2018-03-23-tensorflow-dataset/flower-photos.png" alt=""></p>
+<h1 id="3-写代码"><a href="#3-写代码" class="headerlink" title="3. 写代码"></a>3. 写代码</h1><p>TFRecord的使用方法书上和官网文档都有，就不在这里写了。</p>
+<p>首先是import和预定义，需要用到PIL库处理图片，os库遍历目录， numpy库做随机分成训练、验证和测试集。  </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line">SIZE = <span class="number">50</span> <span class="comment"># 图片resize的尺寸</span></span><br><span class="line">CLASSNUM = <span class="number">5</span> <span class="comment"># 类别数量 5个</span></span><br></pre></td></tr></table></figure>
+<p>然后定义一个函数：输入三种类别概率，随机输出选择的类别</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">random_set</span><span class="params">(train, validate, test)</span>:</span></span><br><span class="line">    chance = np.random.randint(<span class="number">100</span>)</span><br><span class="line">    <span class="keyword">if</span> chance &lt; validate:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">    <span class="keyword">elif</span> chance &lt; validate + test:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">2</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>接下来就是遍历图片的目录，以及处理图片和label了。  </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 声明三个tfrecord的writer</span></span><br><span class="line">writer1 = tf.python_io.TFRecordWriter(<span class="string">"train.tfrecords"</span>)</span><br><span class="line">writer2 = tf.python_io.TFRecordWriter(<span class="string">"validate.tfrecords"</span>)</span><br><span class="line">writer3= tf.python_io.TFRecordWriter(<span class="string">"test.tfrecords"</span>)</span><br><span class="line">writers = [writer1, writer2, writer3]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 手动定义图片根目录和5个子目录</span></span><br><span class="line">root_path = <span class="string">"flower_photos"</span></span><br><span class="line">sub_path = [<span class="string">"daisy"</span>, <span class="string">"dandelion"</span>, <span class="string">"roses"</span>, <span class="string">"sunflowers"</span>, <span class="string">"tulips"</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 直接进入每个子目录处理图片</span></span><br><span class="line"><span class="keyword">for</span> dir <span class="keyword">in</span> sub_path:</span><br><span class="line">    path_now = os.path.join(root_path, dir)</span><br><span class="line">    file_list = os.listdir(path_now)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 处理每一张图片</span></span><br><span class="line">    <span class="keyword">for</span> item <span class="keyword">in</span> file_list:</span><br><span class="line">        <span class="keyword">if</span> os.path.splitext(item)[<span class="number">1</span>] == <span class="string">".jpg"</span>:</span><br><span class="line">            pic = Image.open(os.path.join(path_now, item))</span><br><span class="line">            pic = pic.resize((SIZE, SIZE)) <span class="comment"># 改变图片大小</span></span><br><span class="line">            raw = pic.tobytes() <span class="comment"># 图片序列化</span></span><br><span class="line">            label = (sub_path.index(dir)) <span class="comment"># lable不用one-hot处理，直接取该子目录的序号</span></span><br><span class="line">            print(item, label)</span><br><span class="line">            <span class="comment"># 构建 feature， 将图片和label打包进去</span></span><br><span class="line">            feature = &#123;</span><br><span class="line">                <span class="string">"image"</span>:tf.train.Feature(bytes_list=tf.train.BytesList(value=[raw])),</span><br><span class="line">                <span class="string">"label"</span>:tf.train.Feature(int64_list=tf.train.Int64List(value=[label]))</span><br><span class="line">            &#125;</span><br><span class="line">            example = tf.train.Example(features=tf.train.Features(feature=feature))</span><br><span class="line">            <span class="comment"># 随机选一个集合， 把数据写进去， 这里训练集：测试集：验证集是 8:1:1</span></span><br><span class="line">            i = random_set(<span class="number">80</span>, <span class="number">10</span>, <span class="number">10</span>)</span><br><span class="line">            writers[i].write(example.SerializeToString())</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> writer <span class="keyword">in</span> writers:</span><br><span class="line">    writer.close()</span><br></pre></td></tr></table></figure>
+<h1 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h1><p>这个用概率配比分的方法是我在书上看的，然后把数据分成三个TFRecord是我自己想的，感觉这样更简洁明了。<br>代码写的很丑，东拼西凑，不过暂且能跑起来。</p>
+
+  </div>
+</article>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/sergodeeva">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-前言"><span class="toc-number">1.</span> <span class="toc-text">1. 前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-图片数据-flower-photos"><span class="toc-number">2.</span> <span class="toc-text">2. 图片数据 - flower_photos</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-写代码"><span class="toc-number">3.</span> <span class="toc-text">3. 写代码</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-总结"><span class="toc-number">4.</span> <span class="toc-text">4. 总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/03/23/tensorflow-dataset/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&text=自己做一个Tensorflow的TFRecord"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&is_video=false&description=自己做一个Tensorflow的TFRecord"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=自己做一个Tensorflow的TFRecord&body=Check out this article: http://yoursite.com/2018/03/23/tensorflow-dataset/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&title=自己做一个Tensorflow的TFRecord"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/03/23/tensorflow-dataset/&name=自己做一个Tensorflow的TFRecord&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 mengyaoss77
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/sergodeeva">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+
+

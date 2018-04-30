@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="1在使用Estimator训练时，train方法中的steps参数，和数据输入方法input_fn中 dataset.repeat(epoches) 感觉有点模糊。Google了一下，在stackoverflow看到了一个很好的说明。 原问题链接 2 原文 The contrib.learn.io module is not documented very well, but it seems t">
+<meta name="keywords" content="tensorflow estimator">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Estimator中steps和epoches的区别">
+<meta property="og:url" content="http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/index.html">
+<meta property="og:site_name" content="my blog">
+<meta property="og:description" content="1在使用Estimator训练时，train方法中的steps参数，和数据输入方法input_fn中 dataset.repeat(epoches) 感觉有点模糊。Google了一下，在stackoverflow看到了一个很好的说明。 原问题链接 2 原文 The contrib.learn.io module is not documented very well, but it seems t">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-04-29T15:31:13.684Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Estimator中steps和epoches的区别">
+<meta name="twitter:description" content="1在使用Estimator训练时，train方法中的steps参数，和数据输入方法input_fn中 dataset.repeat(epoches) 感觉有点模糊。Google了一下，在stackoverflow看到了一个很好的说明。 原问题链接 2 原文 The contrib.learn.io module is not documented very well, but it seems t">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>Estimator中steps和epoches的区别</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/sergodeeva">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2018/03/28/custom-estimator/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&text=Estimator中steps和epoches的区别"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&is_video=false&description=Estimator中steps和epoches的区别"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Estimator中steps和epoches的区别&body=Check out this article: http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&name=Estimator中steps和epoches的区别&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1"><span class="toc-number">1.</span> <span class="toc-text">1</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-原文"><span class="toc-number">2.</span> <span class="toc-text">2 原文</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-理解"><span class="toc-number">3.</span> <span class="toc-text">3 理解</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Estimator中steps和epoches的区别
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">my blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2018-04-11T07:32:11.000Z" itemprop="datePublished">2018-04-11</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/tensorflow-estimator/">tensorflow estimator</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="1"><a href="#1" class="headerlink" title="1"></a>1</h1><p>在使用Estimator训练时，train方法中的steps参数，和数据输入方法input_fn中 dataset.repeat(epoches) 感觉有点模糊。Google了一下，在stackoverflow看到了一个很好的说明。</p>
+<p><a href="https://stackoverflow.com/questions/42816124/steps-vs-num-epochs-in-tensorflow-getting-started-tutorial" target="_blank" rel="noopener">原问题链接</a></p>
+<h1 id="2-原文"><a href="#2-原文" class="headerlink" title="2 原文"></a>2 原文</h1><blockquote>
+<p>The contrib.learn.io module is not documented very well, but it seems that numpy_input_fn() function takes some numpy arrays and batches them together as input for a classificator. So, the number of epochs probably means “how many times to go through the input data I have before stopping”. In this case, they feed two arrays of length 4 in 4 element batches, so it will just mean that the input function will do this at most a 1000 times before raising an “out of data” exception. The steps argument in the estimator fit() function is how many times should estimator do the training loop. This particular example is somewhat perverse, so let me make up another one to make things a bit clearer (hopefully).</p>
+</blockquote>
+<blockquote>
+<p>Lets say you have two numpy arrays (samples and labels) that you want to train on. They are a 100 elements each. You want your training to take batches with 10 samples per batch. So after 10 batches you will go through all of your training data. That is one epoch. If you set your input generator to 10 epochs, it will go through your training set 10 times before stopping, that is it will generate at most a 100 batches.</p>
+</blockquote>
+<blockquote>
+<p>Again, the io module is not documented, but considering how other input related APIs in tensorflow work, it should be possible to make it generate data for unlimited number of epochs, so the only thing controlling the length of training are going to be the steps. This gives you some extra flexibility on how you want your training to progress. You can go a number of epochs at a time or a number of steps at a time or both or whatever.</p>
+</blockquote>
+<blockquote>
+<p>Edit: TL;DR Epoch is when your model goes through your whole training data once. Step is when your model trains on a single batch (or a single sample if you send samples one by one). Training for 5 epochs on a 1000 samples 10 samples per batch will take 500 steps.</p>
+</blockquote>
+<h1 id="3-理解"><a href="#3-理解" class="headerlink" title="3 理解"></a>3 理解</h1><p>epoches是对数据遍历的次数<br>steps是训练步骤循环的次数</p>
+<p>假如总共有100条数据，batch_size是10，epoches设定为1的话，那么这个input_fn取出10个batch就会抛出 “out of data” exception。 而每取出一个batch，就会进行1个step的训练。</p>
+<p>但如果不设置epoches，就意味着原始的100条数据可以被无限循环的取出使用，这样训练什么时候停止就完全取决于train steps了。</p>
+
+  </div>
+</article>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/sergodeeva">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1"><span class="toc-number">1.</span> <span class="toc-text">1</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-原文"><span class="toc-number">2.</span> <span class="toc-text">2 原文</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-理解"><span class="toc-number">3.</span> <span class="toc-text">3 理解</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&text=Estimator中steps和epoches的区别"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&is_video=false&description=Estimator中steps和epoches的区别"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Estimator中steps和epoches的区别&body=Check out this article: http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&title=Estimator中steps和epoches的区别"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/04/11/difference-between-epoches-and-steps/&name=Estimator中steps和epoches的区别&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 mengyaoss77
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a href="http://github.com/sergodeeva">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+
+
